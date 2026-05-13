@@ -1,0 +1,67 @@
+{
+  "name": "code-todo",
+  "displayName": "Code Todo",
+  "description": "Scrapes todo items from markdown files and aggregates them into a sidebar visualization",
+  "publisher": "yft",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/toumorokoshi/code-todo"
+  },
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.105.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:markdown",
+    "onView:codeTodo.todoView"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "codeTodo",
+          "title": "Code Todo",
+          "icon": "$(checklist)"
+        }
+      ]
+    },
+    "views": {
+      "codeTodo": [
+        {
+          "type": "webview",
+          "id": "codeTodo.todoView",
+          "name": "Todo Items"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "npm run compile && node ./out/test/runTest.js",
+    "package": "npx @vscode/vsce package"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "25.x",
+    "@types/vscode": "^1.105.0",
+    "@typescript-eslint/eslint-plugin": "^8.56.1",
+    "@typescript-eslint/parser": "^8.56.1",
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.7.1",
+    "eslint": "^10.0.2",
+    "glob": "^13.0.6",
+    "globals": "^17.4.0",
+    "mocha": "^11.7.5",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.56.1"
+  }
+}

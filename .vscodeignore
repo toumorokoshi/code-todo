@@ -1,0 +1,14 @@
+.vscode-test/**
+src/**
+.gitignore
+eslint.config.mjs
+tsconfig.json
+**/*.map
+**/*.ts
+.jj/**
+AGENTS.md
+design/**
+evals/**
+specs/**
+scripts/**
+justfile
