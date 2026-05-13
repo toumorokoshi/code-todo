@@ -144,7 +144,7 @@ function buildHtml(items: TodoItem[]): string {
 <body>
   ${
     items.length === 0
-      ? `<p class="empty">No open todo items found in markdown files.</p>`
+      ? `<p class="empty">No open todo items found. Add a <code>#todo</code> suffix to open markdown checkboxes to track them here.</p>`
       : `<table>
     <thead>
       <tr>
