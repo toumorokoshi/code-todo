@@ -9,6 +9,8 @@ The UI is a webview that is displayed in the vscode sidebar. It is a table of to
 - Finally, all items that are not yet due are listed, in order of due date.
 - All items will also include the file they are defined in within parentheses next to the item.
 
+Each of the preceeding categories is put into their own headers. The sections are collapsible, for example to minimize user distractions by showing upcoming items that are not yet due.
+
 ### Linking
 
 Each todo-item should be clickable, which will point to the exact todo item.

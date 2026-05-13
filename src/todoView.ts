@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { TodoScanner } from "./todoScanner";
-import { TodoItem } from "./todoParser";
+import { TodoItem, GroupedTodoItems } from "./todoParser";
 import { completeTodoItem } from "./todoCompleter";
 
 /** Messages sent from the webview to the extension host. */
@@ -75,8 +75,9 @@ function openFileAtLine(filePath: string, lineNumber: number): void {
 }
 
 /** Build the full HTML document for the webview. */
-function buildHtml(items: TodoItem[]): string {
-  const rows = items.map((item) => buildRow(item)).join("\n");
+function buildHtml(groupedItems: GroupedTodoItems): string {
+  const { noDue, overdue, upcoming } = groupedItems;
+  const isEmpty = noDue.length === 0 && overdue.length === 0 && upcoming.length === 0;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -139,25 +140,31 @@ function buildHtml(items: TodoItem[]): string {
       font-style: italic;
       padding: 8px 6px;
     }
+    details {
+      margin-bottom: 12px;
+    }
+    summary {
+      font-weight: bold;
+      cursor: pointer;
+      padding: 4px 0;
+      color: var(--vscode-sideBarTitle-foreground);
+      border-bottom: 1px solid var(--vscode-panel-border);
+      margin-bottom: 4px;
+    }
+    summary:hover {
+      color: var(--vscode-foreground);
+    }
   </style>
 </head>
 <body>
   ${
-    items.length === 0
+    isEmpty
       ? `<p class="empty">No open todo items found. Add a <code>#todo</code> suffix to open markdown checkboxes to track them here.</p>`
-      : `<table>
-    <thead>
-      <tr>
-        <th></th>
-        <th>Todo</th>
-        <th>Due</th>
-        <th>File</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${rows}
-    </tbody>
-  </table>`
+      : `
+        ${buildSection("No Due Date", noDue, true)}
+        ${buildSection("Overdue & Due Today", overdue, true)}
+        ${buildSection("Upcoming", upcoming, false)}
+      `
   }
   <script>
     const vscode = acquireVsCodeApi();
@@ -185,6 +192,31 @@ function buildHtml(items: TodoItem[]): string {
   </script>
 </body>
 </html>`;
+}
+
+function buildSection(title: string, items: TodoItem[], open: boolean): string {
+  if (items.length === 0) {
+    return "";
+  }
+  const rows = items.map((item) => buildRow(item)).join("\n");
+  return `
+    <details ${open ? "open" : ""}>
+      <summary>${escapeHtml(title)} (${items.length})</summary>
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>Todo</th>
+            <th>Due</th>
+            <th>File</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </details>
+  `;
 }
 
 /** Build a single table row for a TodoItem. */

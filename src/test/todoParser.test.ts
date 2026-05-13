@@ -102,7 +102,12 @@ suite("todoParser", () => {
         makeItem("overdue", past),
       ];
       const sorted = sortTodoItems(items);
-      assert.strictEqual(sorted[0].text, "no due");
+      assert.strictEqual(sorted.noDue.length, 1);
+      assert.strictEqual(sorted.noDue[0].text, "no due");
+      assert.strictEqual(sorted.overdue.length, 1);
+      assert.strictEqual(sorted.overdue[0].text, "overdue");
+      assert.strictEqual(sorted.upcoming.length, 1);
+      assert.strictEqual(sorted.upcoming[0].text, "upcoming");
     });
 
     test("overdue items come before upcoming, ordered earliest first", () => {
@@ -115,9 +120,11 @@ suite("todoParser", () => {
         makeItem("overdue1", past1),
       ];
       const sorted = sortTodoItems(items);
-      assert.strictEqual(sorted[0].text, "overdue1");
-      assert.strictEqual(sorted[1].text, "overdue2");
-      assert.strictEqual(sorted[2].text, "future");
+      assert.strictEqual(sorted.overdue.length, 2);
+      assert.strictEqual(sorted.overdue[0].text, "overdue1");
+      assert.strictEqual(sorted.overdue[1].text, "overdue2");
+      assert.strictEqual(sorted.upcoming.length, 1);
+      assert.strictEqual(sorted.upcoming[0].text, "future");
     });
 
     test("upcoming items ordered earliest first", () => {
@@ -125,8 +132,9 @@ suite("todoParser", () => {
       const far = new Date(Date.now() + 2 * 86400000);
       const items = [makeItem("far", far), makeItem("near", near)];
       const sorted = sortTodoItems(items);
-      assert.strictEqual(sorted[0].text, "near");
-      assert.strictEqual(sorted[1].text, "far");
+      assert.strictEqual(sorted.upcoming.length, 2);
+      assert.strictEqual(sorted.upcoming[0].text, "near");
+      assert.strictEqual(sorted.upcoming[1].text, "far");
     });
   });
 });

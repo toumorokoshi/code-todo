@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
-import { parseTodoContent, sortTodoItems, TodoItem } from "./todoParser";
+import { parseTodoContent, sortTodoItems, TodoItem, GroupedTodoItems } from "./todoParser";
 
 /** Finds all markdown files in the workspace and parses their TODO items. */
 export class TodoScanner {
@@ -9,10 +9,10 @@ export class TodoScanner {
    * Scan all markdown files in the current workspace folders and return a
    * sorted list of todo items.
    */
-  async scan(): Promise<TodoItem[]> {
+  async scan(): Promise<GroupedTodoItems> {
     const workspaceFolders = vscode.workspace.workspaceFolders;
     if (!workspaceFolders || workspaceFolders.length === 0) {
-      return [];
+      return { noDue: [], overdue: [], upcoming: [] };
     }
 
     const markdownUris = await vscode.workspace.findFiles(

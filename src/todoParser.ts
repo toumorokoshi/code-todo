@@ -68,13 +68,19 @@ export function parseTodoContent(content: string, filePath: string): TodoItem[] 
   return items;
 }
 
+export interface GroupedTodoItems {
+  noDue: TodoItem[];
+  overdue: TodoItem[];
+  upcoming: TodoItem[];
+}
+
 /**
  * Sort todo items according to the design spec:
  * 1. Items without due dates.
  * 2. Items that are due or past due (earliest first).
  * 3. Items that are not yet due (earliest first).
  */
-export function sortTodoItems(items: TodoItem[]): TodoItem[] {
+export function sortTodoItems(items: TodoItem[]): GroupedTodoItems {
   const now = new Date();
   const noDue = items.filter((i) => i.dueDate === undefined);
   const overdue = items
@@ -83,5 +89,5 @@ export function sortTodoItems(items: TodoItem[]): TodoItem[] {
   const upcoming = items
     .filter((i) => i.dueDate !== undefined && i.dueDate > now)
     .sort((a, b) => a.dueDate!.getTime() - b.dueDate!.getTime());
-  return [...noDue, ...overdue, ...upcoming];
+  return { noDue, overdue, upcoming };
 }
