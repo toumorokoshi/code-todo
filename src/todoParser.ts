@@ -10,15 +10,21 @@ export interface TodoItem {
   dueDate: Date | undefined;
 }
 
-/** Regex matching an open checkbox line, e.g. `- [ ] some text`. */
+/** Regex matching an open checkbox line, e.g. `- [ ] some text #todo`. */
 const TODO_REGEX = /^\s*-\s+\[\s\]\s+(.+)$/;
+
+/** Regex matching the required `#todo` tag anywhere in the item text. */
+const TODO_TAG_REGEX = /#todo\b/i;
 
 /** Regex matching an inline due-date annotation, e.g. `(DUE: 2026-05-13)`. */
 const DUE_DATE_REGEX = /\(DUE:\s*(\d{4}-\d{2}-\d{2}(?:T[^)]*)?)\)/i;
 
 /**
  * Parse a single line of markdown text into a TodoItem, or return undefined
- * if the line does not contain an open checkbox.
+ * if the line does not contain an open checkbox with a `#todo` tag.
+ *
+ * Only lines matching `- [ ] ... #todo ...` are considered todo items.
+ * The `#todo` tag is stripped from the displayed text.
  */
 export function parseTodoLine(
   line: string,
@@ -31,9 +37,18 @@ export function parseTodoLine(
   }
 
   const rawText = match[1];
+
+  // Only track items that carry the #todo tag.
+  if (!TODO_TAG_REGEX.test(rawText)) {
+    return undefined;
+  }
+
   const dueDateMatch = DUE_DATE_REGEX.exec(rawText);
   const dueDate = dueDateMatch ? new Date(dueDateMatch[1]) : undefined;
-  const text = rawText.replace(DUE_DATE_REGEX, "").trim();
+  const text = rawText
+    .replace(DUE_DATE_REGEX, "")
+    .replace(TODO_TAG_REGEX, "")
+    .trim();
 
   return { filePath, lineNumber, text, dueDate };
 }

@@ -22,7 +22,7 @@ There should be a checkbox on each todo item. Once clicked, it will resolve the 
 A todo item is identified via an open checkbox in a markdown file:
 
 ```markdown
-- [ ] follow up on the design document.
+- [ ] follow up on the design document. #todo
 ```
 
 The extension aggregates all of these items, and displays them.
@@ -32,7 +32,7 @@ The extension aggregates all of these items, and displays them.
 Due dates are specified via an additional annotation in line with the item:
 
 ```markdown
-- [ ] follow up on the design document (DUE: 2026-05-13)
+- [ ] follow up on the design document #todo (DUE: 2026-05-13)
 ```
 
 - ISO8601 timestamps are supported, as are YYYY-MM-DD.

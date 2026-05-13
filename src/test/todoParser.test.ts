@@ -9,13 +9,20 @@ suite("todoParser", () => {
 
     test("returns undefined for completed checkbox", () => {
       assert.strictEqual(
-        parseTodoLine("- [x] done item", "file.md", 1),
+        parseTodoLine("- [x] done item #todo", "file.md", 1),
         undefined,
       );
     });
 
-    test("parses a basic todo item", () => {
-      const item = parseTodoLine("- [ ] follow up on design", "file.md", 5);
+    test("returns undefined for open checkbox without #todo tag", () => {
+      assert.strictEqual(
+        parseTodoLine("- [ ] follow up on design", "file.md", 1),
+        undefined,
+      );
+    });
+
+    test("parses a basic todo item with #todo tag", () => {
+      const item = parseTodoLine("- [ ] follow up on design #todo", "file.md", 5);
       assert.ok(item, "should return a TodoItem");
       assert.strictEqual(item.text, "follow up on design");
       assert.strictEqual(item.lineNumber, 5);
@@ -23,9 +30,15 @@ suite("todoParser", () => {
       assert.strictEqual(item.dueDate, undefined);
     });
 
-    test("parses a todo item with a due date", () => {
+    test("strips the #todo tag from displayed text", () => {
+      const item = parseTodoLine("- [ ] write tests #todo", "file.md", 1);
+      assert.ok(item);
+      assert.ok(!item.text.includes("#todo"), "#todo should be stripped from text");
+    });
+
+    test("parses a todo item with a due date and #todo tag", () => {
       const item = parseTodoLine(
-        "- [ ] review PR (DUE: 2026-05-13)",
+        "- [ ] review PR #todo (DUE: 2026-05-13)",
         "file.md",
         3,
       );
@@ -39,7 +52,7 @@ suite("todoParser", () => {
     });
 
     test("handles leading whitespace in checkbox line", () => {
-      const item = parseTodoLine("  - [ ] indented item", "notes.md", 10);
+      const item = parseTodoLine("  - [ ] indented item #todo", "notes.md", 10);
       assert.ok(item);
       assert.strictEqual(item.text, "indented item");
     });
@@ -47,14 +60,20 @@ suite("todoParser", () => {
 
   suite("parseTodoContent", () => {
     test("returns empty array for content with no todos", () => {
-      const content = "# Heading\n\nSome text\n\n- [x] done\n";
+      const content = "# Heading\n\nSome text\n\n- [x] done #todo\n";
       const items = parseTodoContent(content, "file.md");
       assert.deepStrictEqual(items, []);
     });
 
-    test("returns all open checkbox items", () => {
+    test("ignores open checkboxes without #todo tag", () => {
+      const content = "- [ ] no tag here\n- [ ] also no tag\n";
+      const items = parseTodoContent(content, "tasks.md");
+      assert.deepStrictEqual(items, []);
+    });
+
+    test("returns only #todo-tagged open checkbox items", () => {
       const content =
-        "- [ ] first task\n- [x] done\n- [ ] second task (DUE: 2030-01-01)\n";
+        "- [ ] first task #todo\n- [x] done #todo\n- [ ] not tagged\n- [ ] second task #todo (DUE: 2030-01-01)\n";
       const items = parseTodoContent(content, "tasks.md");
       assert.strictEqual(items.length, 2);
       assert.strictEqual(items[0].text, "first task");
