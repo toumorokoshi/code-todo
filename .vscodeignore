@@ -12,3 +12,5 @@ evals/**
 specs/**
 scripts/**
 justfile
+.beads/**
+GAPS.md

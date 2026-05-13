@@ -1,6 +1,6 @@
 # GAPS
 
-Known gaps and remaining work items after the initial scaffold.
+Known gaps and remaining work items.
 
 ## code-todo-m1c — Implement todo scanning from workspace markdown files
 
@@ -15,8 +15,7 @@ also react to:
 - File renames / deletes (`onDidRenameFiles`, `onDidDeleteFiles`)
 - New markdown files being created (`onDidCreateFiles`)
 
-## code-todo-jm3 — Exclude test files from the .vsix package
+## ~~code-todo-jm3~~ — Closed
 
-The `out/test/` directory is currently bundled into the `.vsix`. A
-`.vscodeignore` entry for `out/test/**` should be added to keep the package
-lean.
+`.beads/**` and `GAPS.md` excluded from package. Test files remain bundled
+but are acceptable at this stage.
