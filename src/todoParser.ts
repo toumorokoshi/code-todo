@@ -68,15 +68,23 @@ export function parseTodoContent(content: string, filePath: string): TodoItem[] 
   return items;
 }
 
+export interface TodoCategory {
+  id: string;
+  title: string;
+  /** Returns the max timestamp (ms) for this category. If undefined, acts as a catch-all. */
+  getEndBoundary?: (now: Date) => number;
+  defaultOpen: boolean;
+}
+
+export interface UpcomingGroup {
+  category: TodoCategory;
+  items: TodoItem[];
+}
+
 export interface GroupedTodoItems {
   noDue: TodoItem[];
   overdue: TodoItem[];
-  thisWeek: TodoItem[];
-  nextWeek: TodoItem[];
-  thisMonth: TodoItem[];
-  nextMonth: TodoItem[];
-  thisYear: TodoItem[];
-  nextYearAndBeyond: TodoItem[];
+  upcoming: UpcomingGroup[];
 }
 
 function getEndOfWeek(d: Date): Date {
@@ -107,30 +115,59 @@ function getEndOfYear(d: Date): Date {
   return new Date(d.getFullYear(), 11, 31, 23, 59, 59, 999);
 }
 
+export const UPCOMING_CATEGORIES: TodoCategory[] = [
+  {
+    id: "thisWeek",
+    title: "This Week",
+    getEndBoundary: (now) => getEndOfWeek(now).getTime(),
+    defaultOpen: true,
+  },
+  {
+    id: "nextWeek",
+    title: "Next Week",
+    getEndBoundary: (now) => getEndOfNextWeek(now).getTime(),
+    defaultOpen: false,
+  },
+  {
+    id: "thisMonth",
+    title: "This Month",
+    // Ensure boundaries strictly advance to prevent overlapping negative buckets
+    getEndBoundary: (now) => Math.max(getEndOfMonth(now).getTime(), getEndOfNextWeek(now).getTime()),
+    defaultOpen: false,
+  },
+  {
+    id: "nextMonth",
+    title: "Next Month",
+    getEndBoundary: (now) => Math.max(getEndOfNextMonth(now).getTime(), getEndOfMonth(now).getTime()),
+    defaultOpen: false,
+  },
+  {
+    id: "thisYear",
+    title: "This Year",
+    getEndBoundary: (now) => Math.max(getEndOfYear(now).getTime(), getEndOfNextMonth(now).getTime()),
+    defaultOpen: false,
+  },
+  {
+    id: "nextYearAndBeyond",
+    title: "Next Year and Beyond",
+    // No boundary; catches everything else
+    defaultOpen: false,
+  },
+];
+
 /**
  * Sort todo items according to the design spec:
  * 1. Items without due dates.
  * 2. Items that are due or past due (earliest first).
- * 3. Future items grouped by bucket (earliest first within each bucket).
+ * 3. Future items grouped by configured buckets (earliest first within each bucket).
  */
 export function sortTodoItems(items: TodoItem[]): GroupedTodoItems {
   const now = new Date();
   
-  const endThisWeek = getEndOfWeek(now);
-  const endNextWeek = getEndOfNextWeek(now);
-  const endThisMonth = new Date(Math.max(getEndOfMonth(now).getTime(), endNextWeek.getTime()));
-  const endNextMonth = new Date(Math.max(getEndOfNextMonth(now).getTime(), endThisMonth.getTime()));
-  const endThisYear = new Date(Math.max(getEndOfYear(now).getTime(), endNextMonth.getTime()));
-
   const groups: GroupedTodoItems = {
     noDue: [],
     overdue: [],
-    thisWeek: [],
-    nextWeek: [],
-    thisMonth: [],
-    nextMonth: [],
-    thisYear: [],
-    nextYearAndBeyond: [],
+    upcoming: UPCOMING_CATEGORIES.map((c) => ({ category: c, items: [] })),
   };
 
   for (const item of items) {
@@ -140,30 +177,29 @@ export function sortTodoItems(items: TodoItem[]): GroupedTodoItems {
       const time = item.dueDate.getTime();
       if (time <= now.getTime()) {
         groups.overdue.push(item);
-      } else if (time <= endThisWeek.getTime()) {
-        groups.thisWeek.push(item);
-      } else if (time <= endNextWeek.getTime()) {
-        groups.nextWeek.push(item);
-      } else if (time <= endThisMonth.getTime()) {
-        groups.thisMonth.push(item);
-      } else if (time <= endNextMonth.getTime()) {
-        groups.nextMonth.push(item);
-      } else if (time <= endThisYear.getTime()) {
-        groups.thisYear.push(item);
       } else {
-        groups.nextYearAndBeyond.push(item);
+        let placed = false;
+        for (const group of groups.upcoming) {
+          const boundary = group.category.getEndBoundary?.(now);
+          if (boundary === undefined || time <= boundary) {
+            group.items.push(item);
+            placed = true;
+            break;
+          }
+        }
+        // Fallback if no catch-all and it exceeds all boundaries (shouldn't happen with our config)
+        if (!placed) {
+          groups.upcoming[groups.upcoming.length - 1].items.push(item);
+        }
       }
     }
   }
 
   const sortFn = (a: TodoItem, b: TodoItem) => a.dueDate!.getTime() - b.dueDate!.getTime();
   groups.overdue.sort(sortFn);
-  groups.thisWeek.sort(sortFn);
-  groups.nextWeek.sort(sortFn);
-  groups.thisMonth.sort(sortFn);
-  groups.nextMonth.sort(sortFn);
-  groups.thisYear.sort(sortFn);
-  groups.nextYearAndBeyond.sort(sortFn);
+  for (const group of groups.upcoming) {
+    group.items.sort(sortFn);
+  }
 
   return groups;
 }

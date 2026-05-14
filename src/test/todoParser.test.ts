@@ -133,13 +133,13 @@ suite("todoParser", () => {
       ];
       const sorted = sortTodoItems(items);
       
-      // this week might actually fall into overdue if 1 hour from now is somehow still past (it's not).
-      // Or if it's Sunday 23:55, 1 hr from now is next week. But practically `thisWeek` or `nextWeek`.
-      // We just ensure length adds up.
-      const totalUpcoming = sorted.thisWeek.length + sorted.nextWeek.length + sorted.thisMonth.length + sorted.nextMonth.length + sorted.thisYear.length;
-      assert.ok(totalUpcoming >= 1, "Should have at least one upcoming item");
-      assert.strictEqual(sorted.nextYearAndBeyond.length, 1);
-      assert.strictEqual(sorted.nextYearAndBeyond[0].text, "future year");
+      // We just ensure they were grouped
+      const totalUpcoming = sorted.upcoming.reduce((acc, g) => acc + g.items.length, 0);
+      assert.strictEqual(totalUpcoming, 2, "Should have exactly 2 upcoming items");
+
+      const lastBucket = sorted.upcoming[sorted.upcoming.length - 1];
+      assert.strictEqual(lastBucket.items.length, 1);
+      assert.strictEqual(lastBucket.items[0].text, "future year");
     });
   });
 });

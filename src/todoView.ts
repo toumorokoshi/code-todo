@@ -74,18 +74,10 @@ function openFileAtLine(filePath: string, lineNumber: number): void {
   });
 }
 
-/** Build the full HTML document for the webview. */
 function buildHtml(groupedItems: GroupedTodoItems): string {
-  const { noDue, overdue, thisWeek, nextWeek, thisMonth, nextMonth, thisYear, nextYearAndBeyond } = groupedItems;
-  const isEmpty =
-    noDue.length === 0 &&
-    overdue.length === 0 &&
-    thisWeek.length === 0 &&
-    nextWeek.length === 0 &&
-    thisMonth.length === 0 &&
-    nextMonth.length === 0 &&
-    thisYear.length === 0 &&
-    nextYearAndBeyond.length === 0;
+  const { noDue, overdue, upcoming } = groupedItems;
+  const isUpcomingEmpty = upcoming.every((g) => g.items.length === 0);
+  const isEmpty = noDue.length === 0 && overdue.length === 0 && isUpcomingEmpty;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -174,12 +166,7 @@ function buildHtml(groupedItems: GroupedTodoItems): string {
       : `
         ${buildSection("No Due Date", noDue, true)}
         ${buildSection("Overdue & Due Today", overdue, true)}
-        ${buildSection("This Week", thisWeek, true)}
-        ${buildSection("Next Week", nextWeek, false)}
-        ${buildSection("This Month", thisMonth, false)}
-        ${buildSection("Next Month", nextMonth, false)}
-        ${buildSection("This Year", thisYear, false)}
-        ${buildSection("Next Year and Beyond", nextYearAndBeyond, false)}
+        ${upcoming.map(g => buildSection(g.category.title, g.items, g.category.defaultOpen)).join("\n        ")}
       `
     }
   <script>
