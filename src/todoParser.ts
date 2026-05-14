@@ -71,23 +71,99 @@ export function parseTodoContent(content: string, filePath: string): TodoItem[] 
 export interface GroupedTodoItems {
   noDue: TodoItem[];
   overdue: TodoItem[];
-  upcoming: TodoItem[];
+  thisWeek: TodoItem[];
+  nextWeek: TodoItem[];
+  thisMonth: TodoItem[];
+  nextMonth: TodoItem[];
+  thisYear: TodoItem[];
+  nextYearAndBeyond: TodoItem[];
+}
+
+function getEndOfWeek(d: Date): Date {
+  const date = new Date(d);
+  date.setHours(23, 59, 59, 999);
+  const day = date.getDay();
+  // 0 is Sunday. Distance to end of week (Sunday).
+  const dist = (7 - day) % 7;
+  date.setDate(date.getDate() + dist);
+  return date;
+}
+
+function getEndOfNextWeek(d: Date): Date {
+  const date = getEndOfWeek(d);
+  date.setDate(date.getDate() + 7);
+  return date;
+}
+
+function getEndOfMonth(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
+}
+
+function getEndOfNextMonth(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth() + 2, 0, 23, 59, 59, 999);
+}
+
+function getEndOfYear(d: Date): Date {
+  return new Date(d.getFullYear(), 11, 31, 23, 59, 59, 999);
 }
 
 /**
  * Sort todo items according to the design spec:
  * 1. Items without due dates.
  * 2. Items that are due or past due (earliest first).
- * 3. Items that are not yet due (earliest first).
+ * 3. Future items grouped by bucket (earliest first within each bucket).
  */
 export function sortTodoItems(items: TodoItem[]): GroupedTodoItems {
   const now = new Date();
-  const noDue = items.filter((i) => i.dueDate === undefined);
-  const overdue = items
-    .filter((i) => i.dueDate !== undefined && i.dueDate <= now)
-    .sort((a, b) => a.dueDate!.getTime() - b.dueDate!.getTime());
-  const upcoming = items
-    .filter((i) => i.dueDate !== undefined && i.dueDate > now)
-    .sort((a, b) => a.dueDate!.getTime() - b.dueDate!.getTime());
-  return { noDue, overdue, upcoming };
+  
+  const endThisWeek = getEndOfWeek(now);
+  const endNextWeek = getEndOfNextWeek(now);
+  const endThisMonth = new Date(Math.max(getEndOfMonth(now).getTime(), endNextWeek.getTime()));
+  const endNextMonth = new Date(Math.max(getEndOfNextMonth(now).getTime(), endThisMonth.getTime()));
+  const endThisYear = new Date(Math.max(getEndOfYear(now).getTime(), endNextMonth.getTime()));
+
+  const groups: GroupedTodoItems = {
+    noDue: [],
+    overdue: [],
+    thisWeek: [],
+    nextWeek: [],
+    thisMonth: [],
+    nextMonth: [],
+    thisYear: [],
+    nextYearAndBeyond: [],
+  };
+
+  for (const item of items) {
+    if (item.dueDate === undefined) {
+      groups.noDue.push(item);
+    } else {
+      const time = item.dueDate.getTime();
+      if (time <= now.getTime()) {
+        groups.overdue.push(item);
+      } else if (time <= endThisWeek.getTime()) {
+        groups.thisWeek.push(item);
+      } else if (time <= endNextWeek.getTime()) {
+        groups.nextWeek.push(item);
+      } else if (time <= endThisMonth.getTime()) {
+        groups.thisMonth.push(item);
+      } else if (time <= endNextMonth.getTime()) {
+        groups.nextMonth.push(item);
+      } else if (time <= endThisYear.getTime()) {
+        groups.thisYear.push(item);
+      } else {
+        groups.nextYearAndBeyond.push(item);
+      }
+    }
+  }
+
+  const sortFn = (a: TodoItem, b: TodoItem) => a.dueDate!.getTime() - b.dueDate!.getTime();
+  groups.overdue.sort(sortFn);
+  groups.thisWeek.sort(sortFn);
+  groups.nextWeek.sort(sortFn);
+  groups.thisMonth.sort(sortFn);
+  groups.nextMonth.sort(sortFn);
+  groups.thisYear.sort(sortFn);
+  groups.nextYearAndBeyond.sort(sortFn);
+
+  return groups;
 }

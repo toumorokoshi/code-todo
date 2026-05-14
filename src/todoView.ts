@@ -24,7 +24,7 @@ export class TodoViewProvider implements vscode.WebviewViewProvider {
 
   private _view?: vscode.WebviewView;
 
-  constructor(private readonly _scanner: TodoScanner) {}
+  constructor(private readonly _scanner: TodoScanner) { }
 
   resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -76,8 +76,16 @@ function openFileAtLine(filePath: string, lineNumber: number): void {
 
 /** Build the full HTML document for the webview. */
 function buildHtml(groupedItems: GroupedTodoItems): string {
-  const { noDue, overdue, upcoming } = groupedItems;
-  const isEmpty = noDue.length === 0 && overdue.length === 0 && upcoming.length === 0;
+  const { noDue, overdue, thisWeek, nextWeek, thisMonth, nextMonth, thisYear, nextYearAndBeyond } = groupedItems;
+  const isEmpty =
+    noDue.length === 0 &&
+    overdue.length === 0 &&
+    thisWeek.length === 0 &&
+    nextWeek.length === 0 &&
+    thisMonth.length === 0 &&
+    nextMonth.length === 0 &&
+    thisYear.length === 0 &&
+    nextYearAndBeyond.length === 0;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -161,15 +169,19 @@ function buildHtml(groupedItems: GroupedTodoItems): string {
   </style>
 </head>
 <body>
-  ${
-    isEmpty
+  ${isEmpty
       ? `<p class="empty">No open todo items found. Add a <code>#todo</code> suffix to open markdown checkboxes to track them here.</p>`
       : `
         ${buildSection("No Due Date", noDue, true)}
         ${buildSection("Overdue & Due Today", overdue, true)}
-        ${buildSection("Upcoming", upcoming, false)}
+        ${buildSection("This Week", thisWeek, true)}
+        ${buildSection("Next Week", nextWeek, false)}
+        ${buildSection("This Month", thisMonth, false)}
+        ${buildSection("Next Month", nextMonth, false)}
+        ${buildSection("This Year", thisYear, false)}
+        ${buildSection("Next Year and Beyond", nextYearAndBeyond, false)}
       `
-  }
+    }
   <script>
     const vscode = acquireVsCodeApi();
 

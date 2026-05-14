@@ -12,7 +12,7 @@ export class TodoScanner {
   async scan(): Promise<GroupedTodoItems> {
     const workspaceFolders = vscode.workspace.workspaceFolders;
     if (!workspaceFolders || workspaceFolders.length === 0) {
-      return { noDue: [], overdue: [], upcoming: [] };
+      return { noDue: [], overdue: [], thisWeek: [], nextWeek: [], thisMonth: [], nextMonth: [], thisYear: [], nextYearAndBeyond: [] };
     }
 
     const markdownUris = await vscode.workspace.findFiles(

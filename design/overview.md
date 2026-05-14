@@ -6,7 +6,7 @@ The UI is a webview that is displayed in the vscode sidebar. It is a table of to
 
 - All todo items without due dates are listed first.
 - Then all items that are due or past due are listed. This is in order of due date (earlier first.)
-- Finally, all items that are not yet due are listed, in order of due date.
+- Items that are not yet due are further grouped into "This Week", "Next Week", "This Month", "Next Month", "This Year", and "Next Year and Beyond", each in their own section, ordered by due date.
 - All items will also include the file they are defined in within parentheses next to the item.
 
 Each of the preceeding categories is put into their own headers. The sections are collapsible, for example to minimize user distractions by showing upcoming items that are not yet due.
