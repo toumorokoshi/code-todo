@@ -116,6 +116,10 @@ function buildHtml(groupedItems: GroupedTodoItems): string {
       color: var(--vscode-foreground);
       text-decoration: none;
       cursor: pointer;
+      display: block;
+      word-wrap: break-word;
+      word-break: break-word;
+      white-space: pre-wrap;
     }
     .todo-link:hover {
       color: var(--vscode-textLink-activeForeground);
@@ -208,7 +212,6 @@ function buildSection(title: string, items: TodoItem[], open: boolean): string {
             <th></th>
             <th>Todo</th>
             <th>Due</th>
-            <th>File</th>
           </tr>
         </thead>
         <tbody>
